@@ -41,7 +41,13 @@ contract Tickets is ERC721 {
     function purchaseTicket() public payable {
     }
 
-    constructor() ERC721() {
+    constructor(address payable Holder, string Name, string URL, uint Price, uint totalTkts, uint maxBuy) ERC721MetaData("Tickets", "TKT") ERC721() {
+        ev1.eventHolder = Holder;
+        ev1.eventName = Name;
+        ev1.URL = URL;
+        ev1.ticketPrice = Price;
+        ev1.numLeft = totalTkts;
+        ev1.maxPurchase = maxBuy;
     }
 
 }
