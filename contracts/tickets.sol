@@ -8,11 +8,6 @@ contract Tickets is ERC721 {
 
     mapping(uint => address) IdxtoHolder;
 
-
-
-    constructor() ERC721(ticketHolders, ) {
-    }
-
     struct ticket {
         address ticketHodler;
         string eventName;
@@ -31,8 +26,22 @@ contract Tickets is ERC721 {
         uint maxPurchase;
     }
 
-    function purchaseTicket() public payable {
+    Event ev1;
 
+    modifier onlyOwner() {
+        require(msg.sender == venueOwner);
+        _;
+    }
+
+    modifier notOwner() {
+        require(msg.sender != venueOwner);
+        _;
+    }
+
+    function purchaseTicket() public payable {
+    }
+
+    constructor() ERC721() {
     }
 
 }
