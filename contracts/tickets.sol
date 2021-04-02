@@ -9,14 +9,14 @@ contract Tickets is ERC721 {
     mapping(uint => address) IdxtoHolder;
 
     struct ticket {
-        address ticketHodler;
+        address ticketHolder;
         string eventName;
         bool sold;
         bool used;
     }
 
     struct Event {
-        address[] ticketHodlers;
+        address [] tickerHolders;
         address payable eventHolder;
         string eventName;
         string URL;
@@ -26,28 +26,35 @@ contract Tickets is ERC721 {
         uint maxPurchase;
     }
 
-    Event ev1;
+    Event[] private events;
 
-    modifier onlyOwner() {
-        require(msg.sender == venueOwner);
-        _;
+    // Returns the index of all the events that this owner owns in the "events" array
+    mapping (address => uint256[]) private eventOwners;
+
+    function mintTokens() public;
+
+    function purchaseTicket() public payable;
+
+    function useTicekt() public;
+
+    function createEvent (string memory Name, string memory URL, uint Price, uint totalTkts, uint maxBuy) {
+        Event memory ev1 = Event({
+        tickerHolders: address[totalTkts],
+        eventHolder : msg.sender,
+        eventName : Name,
+        URL : URL,
+        ticketPrice : Price,
+        numLeft : totalTkts,
+        maxPurchase : maxBuy
+        });
+
+        uint id = events.push(ev1);
+        eventOwners[msg.sender].push(id);
     }
 
-    modifier notOwner() {
-        require(msg.sender != venueOwner);
-        _;
-    }
+    // helper functions
+    function getTicketHolders();
 
-    function purchaseTicket() public payable {
-    }
-
-    constructor(address payable Holder, string Name, string URL, uint Price, uint totalTkts, uint maxBuy) ERC721MetaData("Tickets", "TKT") ERC721() {
-        ev1.eventHolder = Holder;
-        ev1.eventName = Name;
-        ev1.URL = URL;
-        ev1.ticketPrice = Price;
-        ev1.numLeft = totalTkts;
-        ev1.maxPurchase = maxBuy;
-    }
+    // function ownerOnly returns bool();
 
 }
