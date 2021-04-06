@@ -8,22 +8,19 @@ contract Tickets is ERC721 {
 
     mapping(uint => address) IdxtoHolder;
 
-    struct ticket {
-        address ticketHolder;
-        string eventName;
-        bool sold;
-        bool used;
-    }
-
     struct Event {
-        address [] tickerHolders;
+        address [] ticketHolders;
         address payable eventHolder;
         string eventName;
         string URL;
         
         uint ticketPrice;
-        uint numLeft;
-        uint maxPurchase;
+        uint maxSupply;
+        uint maxPurchaseAmount;
+
+        uint numTicketsPurchased;
+
+        mapping (address => uint[]) tokensOwnedByAddress;
     }
 
     Event[] private events;
@@ -31,25 +28,59 @@ contract Tickets is ERC721 {
     // Returns the index of all the events that this owner owns in the "events" array
     mapping (address => uint256[]) private eventOwners;
 
-    function mintTokens() public;
+    function transferTicket(address _to, uint _quantity) public payable {
 
-    function purchaseTicket() public payable;
+    }
 
-    function useTicekt() public;
+    function invalidateTicket() {
 
-    function createEvent (string memory Name, string memory URL, uint Price, uint totalTkts, uint maxBuy) {
+    }
+
+    function purchaseTicket(uint eventIdx, uint quantity) public payable returns (bool) {
+        Event thisEvent = events[eventIdx];
+
+        require (quantity <= thisEvent.maxPurchaseAmount, "Cannot purchase more than the maxPurchaseAmount for this ticket");
+        require (thisEvent.numTicketsPurchased < thisEvent.maxSupply, "This event has sold out of tickets");
+        require (msg.value >= thisEvent.ticketPrice.mul(quantity), "Please send enough money");
+
+        thisEvent.numTicketsPurchased;
+        
+        for (uint i = 0; i < thisEvent ; i++) {
+            _mint(msg.sender, thisEvent.numTicketsPurchased);
+            thisEvent.numTicketsPurchased++;
+        }
+
+        thisEvent.ticketHolders.push(msg.sender);
+
+        return true;
+    }
+
+    function useTicket(uint tokenId) public {
+        require (tokensOwnedByAddress[msg.sender])
+
+
+        _burn(tokenId);
+    }
+
+    function createEvent (string memory Name, string memory URL, uint Price, uint totalTkts, uint maxBuy) public {
         Event memory ev1 = Event({
-        tickerHolders: address[totalTkts],
+        ticketHolders : address[totalTkts],
         eventHolder : msg.sender,
         eventName : Name,
         URL : URL,
         ticketPrice : Price,
-        numLeft : totalTkts,
-        maxPurchase : maxBuy
+        maxSupply : totalTkts,
+        maxPurchaseAmount : maxBuy,
+        numTicketsPurchased : 0
         });
 
-        uint id = events.push(ev1);
-        eventOwners[msg.sender].push(id);
+        uint eventIdx = events.push(ev1);
+        eventOwners[msg.sender].push(eventIdx);
+
+        eventToStartingTokenID[eventIdx] = 
+
+        // Mint the maximum supply of tokens all at once
+        mintTokens(eventIdx);
     }
 
     // helper functions
