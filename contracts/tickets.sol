@@ -9,18 +9,17 @@ contract Tickets is ERC721 {
     mapping(uint => address) IdxtoHolder;
 
     struct Event {
-        address [] ticketHolders;
         address payable eventHolder;
         string eventName;
         string URL;
         
         uint ticketPrice;
         uint maxSupply;
-        uint maxPurchaseAmount;
+        //uint maxPurchaseAmount;
 
         uint numTicketsPurchased;
 
-        mapping (address => uint[]) tokensOwnedByAddress;
+        mapping (address => uint) tokensOwnedByAddress;
     }
 
     Event[] private events;
@@ -32,31 +31,27 @@ contract Tickets is ERC721 {
 
     }
 
-    function invalidateTicket() {
-
-    }
-
     function purchaseTicket(uint eventIdx, uint quantity) public payable returns (bool) {
         Event thisEvent = events[eventIdx];
 
-        require (quantity <= thisEvent.maxPurchaseAmount, "Cannot purchase more than the maxPurchaseAmount for this ticket");
-        require (thisEvent.numTicketsPurchased < thisEvent.maxSupply, "This event has sold out of tickets");
+        //require (quantity <= thisEvent.maxPurchaseAmount, "Cannot purchase more than the maxPurchaseAmount for this ticket");
+        //require (thisEvent.numTicketsPurchased < thisEvent.maxSupply, "This event has sold out of tickets");
         require (msg.value >= thisEvent.ticketPrice.mul(quantity), "Please send enough money");
 
         thisEvent.numTicketsPurchased;
         
-        for (uint i = 0; i < thisEvent ; i++) {
-            _mint(msg.sender, thisEvent.numTicketsPurchased);
-            thisEvent.numTicketsPurchased++;
-        }
-
-        thisEvent.ticketHolders.push(msg.sender);
+        //for (uint i = 0; i < quantity ; i++) {
+        thisEvent.tokensOwnedByAddress[msg.sender] = thisEvent.numTicketsPurchased;
+        _mint(msg.sender, thisEvent.numTicketsPurchased);
+        thisEvent.numTicketsPurchased++;
+        //}
 
         return true;
     }
 
     function useTicket(uint tokenId) public {
-        require (tokensOwnedByAddress[msg.sender])
+        thisEvent = events[eventIdx];
+        require (thisEvent.tokensOwnedByAddress[msg.sender] == tokenId, "You do not own this Token");
 
 
         _burn(tokenId);
@@ -64,13 +59,13 @@ contract Tickets is ERC721 {
 
     function createEvent (string memory Name, string memory URL, uint Price, uint totalTkts, uint maxBuy) public {
         Event memory ev1 = Event({
-        ticketHolders : address[totalTkts],
+        // ticketHolders : address[totalTkts],
         eventHolder : msg.sender,
         eventName : Name,
         URL : URL,
         ticketPrice : Price,
         maxSupply : totalTkts,
-        maxPurchaseAmount : maxBuy,
+        //maxPurchaseAmount : maxBuy,
         numTicketsPurchased : 0
         });
 
@@ -84,7 +79,7 @@ contract Tickets is ERC721 {
     }
 
     // helper functions
-    function getTicketHolders();
+    //function getTicketHolders();
 
     // function ownerOnly returns bool();
 
