@@ -6,10 +6,10 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract Tickets is ERC721 {
 
-    mapping(uint => address) IdxtoHolder;
+    mapping(uint => address) IdxToHolder;
 
     struct Event {
-        address payable eventHolder;
+        address eventHolder;
         string eventName;
         string URL;
         
@@ -24,13 +24,16 @@ contract Tickets is ERC721 {
 
     Event[] private events;
     mapping (address => uint) tokensOwnedByAddress;
-
+    
     // Returns the index of all the events that this owner owns in the "events" array
     mapping (address => uint256[]) private eventOwners;
+    constructor() public ERC721("Event", "TKT") {}
+    function transferTicket(address _to, uint _tokenID) public payable {
+	require(address(0) != _to, "Invalid Address");
+	transferFrom(msg.sender, _to, _tokenID);
+    }
 
-    function transferTicket(address _to, uint _quantity) public payable;
-
-    function purchaseTicket(uint eventIdx, uint quantity) public payable returns (bool) {
+    function purchaseTicket(uint eventIdx) public payable returns (bool) {
         Event storage thisEvent = events[eventIdx];
 
         //require (quantity <= thisEvent.maxPurchaseAmount, "Cannot purchase more than the maxPurchaseAmount for this ticket");
@@ -41,6 +44,7 @@ contract Tickets is ERC721 {
         
         //for (uint i = 0; i < quantity ; i++) {
         tokensOwnedByAddress[msg.sender] = thisEvent.numTicketsPurchased;
+	IdxToHolder[thisEvent.numTicketsPurchased] = msg.sender;
         _mint(msg.sender, thisEvent.numTicketsPurchased);
         thisEvent.numTicketsPurchased++;
         //}
@@ -54,23 +58,23 @@ contract Tickets is ERC721 {
         require (thisEvent.ticketUsed[tokenId] == false, "This ticket has already been used");
 
         _burn(tokenId);
-
+	tokensOwnedByAddress[msg.sender]--;
+	IdxToHolder[tokenId] = address(0);
         thisEvent.ticketUsed[tokenId] = true;
 
         return true;
     }
 
-    function createEvent (string memory Name, string memory URL, uint Price, uint totalTkts, uint maxBuy) public {
+    function createEvent (string memory Name, string memory URL, uint Price, uint totalTkts) public {
         Event memory ev1;
         ev1.eventHolder = msg.sender;
-        // // ticketHolders : address[totalTkts],
-        // eventHolder : msg.sender,
-        // eventName : Name,
-        // URL : URL,
-        // ticketPrice : Price,
-        // maxSupply : totalTkts,
-        // //maxPurchaseAmount : maxBuy,
-        // numTicketsPurchased : 0
+        //ev1.eventHolder : msg.sender,
+        ev1.eventName = Name;
+        ev1.URL = URL;
+        ev1.ticketPrice = Price;
+        ev1.maxSupply = totalTkts;
+       	//maxPurchaseAmount : maxBuy,
+        ev1.numTicketsPurchased = 0;
         // });
 
         events.push(ev1);
@@ -79,7 +83,14 @@ contract Tickets is ERC721 {
         eventOwners[msg.sender].push(eventIdx);
     }
 
-    function destroyEvent() public payable;
+    function destroyEvent(uint eventIndex) public payable {
+    	require(msg.sender == events[eventIndex].eventHolder, "You are not the event holder");
+	for(uint i=0; i < events[eventIndex].numTicketsPurchased; i++) {
+		_burn(i);
+		tokensOwnedByAddress[IdxToHolder[i]] = 0;
+		IdxToHolder[i] = address(0);
+	}
+    }
 
     // helper functions
     //function getTicketHolders();
