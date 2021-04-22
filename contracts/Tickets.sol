@@ -6,11 +6,13 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract Tickets is ERC721 {
 
+    event Purchase(address indexed buyer, uint ticket_number);
+
     mapping(uint => address) IdxToHolder;
 
-    struct Event {
-        address eventHolder;
-        string eventName;
+    struct TicketEvent {
+        address TicketEventHolder;
+        string TicketEventName;
         string URL;
         
         uint ticketPrice;
@@ -22,55 +24,59 @@ contract Tickets is ERC721 {
         bool[] ticketUsed;
     }
 
-    Event[] private events;
+    event CreateEvent(uint eventIdx);
+
+    TicketEvent[] private TicketEvents;
     mapping (address => uint) tokensOwnedByAddress;
     
-    // Returns the index of all the events that this owner owns in the "events" array
-    mapping (address => uint256[]) private eventOwners;
-    constructor() public ERC721("Event", "TKT") {}
+    // Returns the index of all the TicketEvents that this owner owns in the "TicketEvents" array
+    mapping (address => uint256[]) private TicketEventOwners;
+    constructor() public ERC721("TicketEvent", "TKT") {}
     
     function transferTicket(address _to, uint _tokenID) public payable {
 	require(address(0) != _to, "Invalid Address");
 	transferFrom(msg.sender, _to, _tokenID);
     }
 
-    function purchaseTicket(uint eventIdx) public payable returns (bool) {
-        Event storage thisEvent = events[eventIdx];
+    function purchaseTicket(uint TicketEventIdx) public payable returns (bool) {
+        TicketEvent storage thisTicketEvent = TicketEvents[TicketEventIdx];
 
-        //require (quantity <= thisEvent.maxPurchaseAmount, "Cannot purchase more than the maxPurchaseAmount for this ticket");
-        require (thisEvent.numTicketsPurchased < thisEvent.maxSupply, "This event has sold out of tickets");
-        require (msg.value >= thisEvent.ticketPrice, "Please send enough money");
+        //require (quantity <= thisTicketEvent.maxPurchaseAmount, "Cannot purchase more than the maxPurchaseAmount for this ticket");
+        require (thisTicketEvent.numTicketsPurchased < thisTicketEvent.maxSupply, "This TicketEvent has sold out of tickets");
+        require (msg.value >= thisTicketEvent.ticketPrice, "Please send enough money");
 
-        thisEvent.numTicketsPurchased;
+        thisTicketEvent.numTicketsPurchased;
         
         //for (uint i = 0; i < quantity ; i++) {
-        tokensOwnedByAddress[msg.sender] = thisEvent.numTicketsPurchased;
-	IdxToHolder[thisEvent.numTicketsPurchased] = msg.sender;
-        _mint(msg.sender, thisEvent.numTicketsPurchased);
-        thisEvent.numTicketsPurchased++;
+        tokensOwnedByAddress[msg.sender] = thisTicketEvent.numTicketsPurchased;
+	IdxToHolder[thisTicketEvent.numTicketsPurchased] = msg.sender;
+        _mint(msg.sender, thisTicketEvent.numTicketsPurchased);
+        thisTicketEvent.numTicketsPurchased++;
         //}
+
+        emit Purchase(msg.sender, thisTicketEvent.numTicketsPurchased);
 
         return true;
     }
 
-    function useTicket(uint eventIdx, uint tokenId) public returns (bool) {
-        Event storage thisEvent = events[eventIdx];
+    function useTicket(uint TicketEventIdx, uint tokenId) public returns (bool) {
+        TicketEvent storage thisTicketEvent = TicketEvents[TicketEventIdx];
         require (tokensOwnedByAddress[msg.sender] == tokenId, "You do not own this Token");
-        require (thisEvent.ticketUsed[tokenId] == false, "This ticket has already been used");
+        require (thisTicketEvent.ticketUsed[tokenId] == false, "This ticket has already been used");
 
         _burn(tokenId);
 	tokensOwnedByAddress[msg.sender]--;
 	IdxToHolder[tokenId] = address(0);
-        thisEvent.ticketUsed[tokenId] = true;
+        thisTicketEvent.ticketUsed[tokenId] = true;
 
         return true;
     }
 
-    function createEvent (string memory Name, string memory URL, uint Price, uint totalTkts) public returns (uint){
-        Event memory ev1;
-        ev1.eventHolder = msg.sender;
-        //ev1.eventHolder : msg.sender,
-        ev1.eventName = Name;
+    function createTicketEvent (string memory Name, string memory URL, uint Price, uint totalTkts) public returns (uint){
+        TicketEvent memory ev1;
+        ev1.TicketEventHolder = msg.sender;
+        //ev1.TicketEventHolder : msg.sender,
+        ev1.TicketEventName = Name;
         ev1.URL = URL;
         ev1.ticketPrice = Price;
         ev1.maxSupply = totalTkts;
@@ -78,16 +84,19 @@ contract Tickets is ERC721 {
         ev1.numTicketsPurchased = 0;
         // });
 
-        events.push(ev1);
-        uint eventIdx = events.length-1;
+        TicketEvents.push(ev1);
+        uint TicketEventIdx = TicketEvents.length-1;
 
-        eventOwners[msg.sender].push(eventIdx);
-        return eventIdx;
+        TicketEventOwners[msg.sender].push(TicketEventIdx);
+
+        emit CreateEvent(TicketEventIdx);
+
+        return TicketEventIdx;
     }
 
-    function destroyEvent(uint eventIndex) public payable {
-    	require(msg.sender == events[eventIndex].eventHolder, "You are not the event holder");
-	for(uint i=0; i < events[eventIndex].numTicketsPurchased; i++) {
+    function destroyTicketEvent(uint TicketEventIndex) public payable {
+    	require(msg.sender == TicketEvents[TicketEventIndex].TicketEventHolder, "You are not the TicketEvent holder");
+	for(uint i=0; i < TicketEvents[TicketEventIndex].numTicketsPurchased; i++) {
 		_burn(i);
 		tokensOwnedByAddress[IdxToHolder[i]] = 0;
 		IdxToHolder[i] = address(0);
@@ -95,20 +104,20 @@ contract Tickets is ERC721 {
     }
 
     // helper functions
-    function getTicketHolders(uint eventIdx) public view returns (address[] memory) {
+    function getTicketHolders(uint TicketEventIdx) public view returns (address[] memory) {
     	address[] memory  ticketHold;
-    	for(uint i=0; i < events[eventIdx].numTicketsPurchased; i++) {
+    	for(uint i=0; i < TicketEvents[TicketEventIdx].numTicketsPurchased; i++) {
     		ticketHold[i] = IdxToHolder[i];
     	}
     	return ticketHold;
     }
 
-    function getEventInfo(uint eventIdx) public view returns (string memory, string memory, uint, uint) {
-    	return (events[eventIdx].eventName, events[eventIdx].URL, events[eventIdx].ticketPrice, events[eventIdx].numTicketsPurchased);
+    function getTicketEventInfo(uint TicketEventIdx) public view returns (string memory, string memory, uint, uint) {
+    	return (TicketEvents[TicketEventIdx].TicketEventName, TicketEvents[TicketEventIdx].URL, TicketEvents[TicketEventIdx].ticketPrice, TicketEvents[TicketEventIdx].numTicketsPurchased);
     }
     
-    function getEvents() public view returns (Event[] memory) {
-    	return events;
+    function getTicketEvents() public view returns (TicketEvent[] memory) {
+    	return TicketEvents;
     }
     
 
