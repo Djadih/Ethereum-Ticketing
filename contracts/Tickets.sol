@@ -7,7 +7,8 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 contract Tickets is ERC721 {
 
     event Purchase(address indexed buyer, uint ticket_number);
-
+    event Here1();
+    event Here2();
     mapping(uint => address) IdxToHolder;
 
     struct TicketEvent {
@@ -63,9 +64,8 @@ contract Tickets is ERC721 {
         TicketEvent storage thisTicketEvent = TicketEvents[TicketEventIdx];
         require (tokensOwnedByAddress[msg.sender] == tokenId, "You do not own this Token");
         require (thisTicketEvent.ticketUsed[tokenId] == false, "This ticket has already been used");
-
         _burn(tokenId);
-	tokensOwnedByAddress[msg.sender]--;
+	tokensOwnedByAddress[msg.sender] = 0;
 	IdxToHolder[tokenId] = address(0);
         thisTicketEvent.ticketUsed[tokenId] = true;
 
