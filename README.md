@@ -11,19 +11,21 @@ https://github.com/gkd248/TicketingPortal
 ## Code installation
 
 Download both from git
-npm install inside of smart contract repo: 
+
+### npm install inside of smart contract repo: 
 	npm install
 
-Run ganache-cli: 
+#### Run ganache-cli: 
 	ganache-cli
 
 ## Running the code
 
-move to smart contract repo and migrate with truffle: 
+### move to smart contract repo and migrate with truffle: 
 	truffle migrate 
+
 Then copy the contract address from console and add it to the frontend in SmartContractABI.js
 
-move to React frontend and deploy: 
+### move to React frontend and deploy: 
 	npm install
 	npm start
 
